@@ -15,7 +15,8 @@ from linebot.v3.exceptions import (
 from linebot.v3.webhooks import (
     MessageEvent,
     TextMessageContent,
-    FileMessageContent
+    FileMessageContent,
+    JoinEvent
 )
 from linebot.v3.messaging import (
     Configuration,
@@ -74,8 +75,13 @@ def callback():
 
     return 'OK'
 
+@handler.add(JoinEvent)
+def join_event(event: JoinEvent):
+    app.logger.info(json.loads(event.json()).get("source"))
+
 @handler.add(MessageEvent, message=TextMessageContent)
 def message_text(event: MessageEvent):
+    # app.logger.info(event.json())
     if event.message.text.lower() in ["使用者資訊", "info"]:
         with ApiClient(configuration) as api_client:
             source = json.loads(event.source.json())
