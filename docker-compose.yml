@@ -1,0 +1,13 @@
+services:
+  pdf-helper:
+    container_name: pdf-helper
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - FLASK_APP=app.py
+      - LINE_CHANNEL_SECRET=${LINE_CHANNEL_SECRET}
+      - LINE_CHANNEL_ACCESS_TOKEN=${LINE_CHANNEL_ACCESS_TOKEN}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - .:/app

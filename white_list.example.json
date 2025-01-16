@@ -1,0 +1,10 @@
+{
+    "white_list_user": {
+        "user_id1": "user_name1",
+        "user_id2": "user_name2"
+    },
+    "white_list_group": {
+        "group_id1": "group_name1",
+        "group_id2": "group_name2"
+    }
+}
