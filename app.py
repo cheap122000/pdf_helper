@@ -110,12 +110,12 @@ def message_file(event: MessageEvent):
                         messages=[TextMessage(text=f"{event.message.file_name}\n\n{summary}")]
                     )
                 )
-                print("="*10)
-                print(f"group_id: {group_id}")
-                print(f"user_id: {user_id}")
-                print(f"user_name: {line_bot_api.get_profile(user_id).display_name}")
-                print(f"file_name: {event.message.file_name}")
-                print("="*10)
+                app.logger.info("="*10)
+                app.logger.info(f"group_id: {group_id}")
+                app.logger.info(f"user_id: {user_id}")
+                app.logger.info(f"user_name: {line_bot_api.get_profile(user_id).display_name}")
+                app.logger.info(f"file_name: {event.message.file_name}")
+                app.logger.info("="*10)
             else:
                 line_bot_api = MessagingApi(api_client)
                 line_bot_api.reply_message_with_http_info(
