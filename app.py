@@ -106,6 +106,7 @@ def message_file(event: MessageEvent):
             
             if user_id in white_list_user.keys() or group_id in while_list_group.keys():
                 pdf_content = read_pdf_from_url(f"https://api-data.line.me/v2/bot/message/{event.message.id}/content")
+                # print(pdf_content)
                 summary = summarize_with_requests(pdf_content)
                 # summary = f"test"
 
@@ -173,7 +174,8 @@ def summarize_with_requests(content: str) -> str:
         "model": "gpt-4o-mini",
         "messages": [
             {"role": "system", "content": "你是一個專業的摘要產生助手，請務必包含所有關鍵細節與背景資訊。"},
-            {"role": "user", "content": f"請用繁體中文幫我總結以下內容，並提供詳細的背景、例子和重點資訊，若無法總結，請回傳『此檔案無法處理，PDF必須為純文字格式』：\n{content}"}
+            # {"role": "user", "content": f"請用繁體中文幫我總結以下內容，並提供詳細的背景、例子和重點資訊，若無法總結，請回傳『此檔案無法處理，PDF必須為純文字格式』：\n{content}"}
+            {"role": "user", "content": f"請用繁體中文幫我總結以下內容，並提供詳細的背景、例子和重點資訊，\n{content}"}
         ],
         "temperature": 0.0,
         "max_tokens": 1000
@@ -181,6 +183,7 @@ def summarize_with_requests(content: str) -> str:
 
     response = requests.post(url, headers=headers, json=payload)
     data = response.json()
+    # print("response data: ", data)
     
     # 從回應 JSON 中取出摘要文字
     # 依照 OpenAI 回應格式，通常位於 data['choices'][0]['message']['content']
