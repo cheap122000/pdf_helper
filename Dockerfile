@@ -12,8 +12,8 @@ COPY . /app
 
 # 安裝依賴庫
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install -U crawl4ai
-RUN python -m playwright install --with-deps chromium
+# RUN pip install -U crawl4ai
+# RUN python -m playwright install --with-deps chromium
 
 # 設定環境變數
 ENV FLASK_APP=app.py

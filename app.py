@@ -95,6 +95,44 @@ def message_text(event: MessageEvent):
                     messages=[TextMessage(text=f"使用者ID: {user_id}\n群組ID: {group_id}")]
                 )
             )
+    elif event.message.text.lower().find("http") != -1:
+        with ApiClient(configuration) as api_client:
+            source = json.loads(event.source.json())
+            user_id = source.get("user_id")
+            group_id = source.get("group_id")
+
+            response = requests.post(
+                "http://10.0.0.105:11235/crawl",
+                json={"urls": [event.message.text], "priority": 10}
+            )
+            response = response.json()
+            raw_markdown = response["results"][0]["markdown"]["raw_markdown"]
+            markdown_with_citations = response["results"][0]["markdown"]["markdown_with_citations"]
+            html = response["results"][0]["html"]
+            start_tag = html.find("<title>") + len("<title>")
+            end_tag = html.find("</title>")
+            title = html[start_tag:end_tag]
+            
+            if user_id in white_list_user.keys() or group_id in while_list_group.keys():
+                summary = summarize_with_markdown(raw_markdown)
+                # summary = f"test"
+
+                line_bot_api = MessagingApi(api_client)
+                line_bot_api.reply_message_with_http_info(
+                    ReplyMessageRequest(
+                        reply_token=event.reply_token,
+                        messages=[TextMessage(text=f"{title}\n\n{summary}")]
+                    )
+                )
+            else:
+                line_bot_api = MessagingApi(api_client)
+                line_bot_api.reply_message_with_http_info(
+                    ReplyMessageRequest(
+                        reply_token=event.reply_token,
+                        messages=[TextMessage(text=f"你不是白名單使用者或群組，無法使用此功能")]
+                    )
+                )
+    
 
 @handler.add(MessageEvent, message=FileMessageContent)
 def message_file(event: MessageEvent):
@@ -176,6 +214,40 @@ def summarize_with_requests(content: str) -> str:
             {"role": "system", "content": "你是一個專業的摘要產生助手，請務必包含所有關鍵細節與背景資訊。"},
             # {"role": "user", "content": f"請用繁體中文幫我總結以下內容，並提供詳細的背景、例子和重點資訊，若無法總結，請回傳『此檔案無法處理，PDF必須為純文字格式』：\n{content}"}
             {"role": "user", "content": f"請用繁體中文幫我總結以下內容，並提供詳細的背景、例子和重點資訊，\n{content}"}
+        ],
+        "temperature": 0.0,
+        "max_tokens": 1000
+    }
+
+    response = requests.post(url, headers=headers, json=payload)
+    data = response.json()
+    # print("response data: ", data)
+    
+    # 從回應 JSON 中取出摘要文字
+    # 依照 OpenAI 回應格式，通常位於 data['choices'][0]['message']['content']
+    try:
+        summary = data['choices'][0]['message']['content']
+        return summary.strip()
+    except (KeyError, IndexError):
+        return "摘要失敗，請檢查 API 回應。"
+    
+def summarize_with_markdown(content: str) -> str:
+    """
+    使用 requests 對 OpenAI ChatCompletion API 發送請求，
+    將 content 作為用戶訊息，請求 GPT 生成摘要。
+    """
+    url = "https://api.openai.com/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    # 可以依需求調整 model、temperature、max_tokens 等參數
+    payload = {
+        "model": "gpt-4o-mini",
+        "messages": [
+            {"role": "system", "content": "你是一個專業的摘要產生助手，請務必包含所有關鍵細節與背景資訊。"},
+            # {"role": "user", "content": f"請用繁體中文幫我總結以下內容，並提供詳細的背景、例子和重點資訊，若無法總結，請回傳『此檔案無法處理，PDF必須為純文字格式』：\n{content}"}
+            {"role": "user", "content": f"請用繁體中文幫我總結以下markdown內容，並提供詳細的背景、例子和重點資訊，\n{content}"}
         ],
         "temperature": 0.0,
         "max_tokens": 1000
